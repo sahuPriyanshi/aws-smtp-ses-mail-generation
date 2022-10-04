@@ -1,0 +1,131 @@
+//---------------------------------------------------CONTROLLER------------------------------------------------------------
+package com.example.demo;
+
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+@RestController
+@RequestMapping("/mail")
+public class DemoController {
+
+    @GetMapping("/sent")
+    public String sentMail(@RequestParam("email") String email) throws Exception {
+        AmazonSESSample amazonSESSample = new AmazonSESSample();
+        amazonSESSample.sent(email);
+        return "Success";
+    }
+
+}
+//---------------------------x----------------------------x------------------------------x----------------------------x-------------
+//-----------------------------------------------------------SERVICE IMPL-----------------------------------------------------------
+package com.example.demo;
+
+import java.util.Properties;
+import javax.mail.Message;
+import javax.mail.Session;
+import javax.mail.Transport;
+import javax.mail.internet.InternetAddress;
+import javax.mail.internet.MimeMessage;
+
+public class AmazonSESSample {
+    // -----------------------------------Replace sender@example.com with your "From" address.
+    // -----------------------------------This address must be verified.
+    static final String FROM = "update@mdshorts.com";
+    static final String FROMNAME = "Time Tracker";
+    // -----------------------------------Replace recipient@example.com with a "To" address. If your account
+    // -----------------------------------is still in the sandbox, this address must be verified.
+    static final String TO = "recipient@example.com";
+    // -----------------------------------Replace smtp_username with your Amazon SES SMTP user name.
+    static final String SMTP_USERNAME = "AKIAWJRUIZJT5HPW4KHN";
+    // -----------------------------------Replace smtp_password with your Amazon SES SMTP password.
+    static final String SMTP_PASSWORD = "BF3zz+/yjROsxrJNN6mUNvKGYJCmMd5EBLLsI2/jrRUu";
+
+    // -----------------------------------The name of the Configuration Set to use for this message.
+    // -----------------------------------If you comment out or remove this variable, you will also need to
+    // -----------------------------------comment out or remove the header below.
+    // static final String CONFIGSET = "ConfigSet";
+
+    // -----------------------------------Amazon SES SMTP host name. This example uses the US West (Oregon) region.
+    // -----------------------------------See https://docs.aws.amazon.com/ses/latest/DeveloperGuide/regions.html#region-endpoints
+    // -----------------------------------for more information.
+    static final String HOST = "email-smtp.us-east-1.amazonaws.com";
+
+    // -----------------------------------The port you will connect to on the Amazon SES SMTP endpoint.
+    static final int PORT = 587;
+
+    static final String SUBJECT = "Invitation from Time Tracker";
+
+    
+    public void sent(String toEmail) throws Exception {
+        
+        File htmlTemplateFile = new File("C:\\Users\\divergent\\Downloads\\arti.html");
+        String htmlString = FileUtils.readFileToString(htmlTemplateFile);
+        String name= "New Page";
+        htmlString = htmlString.replace("$name", name);
+        System.out.println("created,...");
+//	File newHtmlFile = new File("c:\\Users\\diversent\\Downloads\\arti.html");
+        FileUtils.writeStringToFile(htmlTemplateFile, htmlString);
+        System.out.println("yess..");
+        
+//        String BODY = String.join(
+//                System.getProperty("line.separator"),
+//                "<h1>Welcome User</h1>",
+//                "<p>Following are your credentials to login</p>",
+//                "<p>USER NAME: "+toEmail+"<br></br>PASSWORD: password</p>",
+//                "<h4>Thank you for participating</h4>",
+//                "<p>We are glad that you are a part of the first of its kind the ''Online Practice Study'' that will help us study your online consultative behaviour.The aim is to study and draw relevant insights that will help you enhance your digital practice.</p>",
+//                "<p>The process is simple install mdshorts study on your android mobile.</p>",
+//                "<a href='https://github.com/javaee/javamail'>Javamail Package</a>",
+//                " for <a href='https://www.java.com'>Java</a>."
+//        );
+
+        // Create a Properties object to contain connection configuration information.
+        Properties props = System.getProperties();
+        props.put("mail.transport.protocol", "smtp");
+        props.put("mail.smtp.port", PORT);
+        props.put("mail.smtp.starttls.enable", "true");
+        props.put("mail.smtp.auth", "true");
+
+        // Create a Session object to represent a mail session with the specified properties.
+        Session session = Session.getDefaultInstance(props);
+
+        // Create a message with the specified information.
+        MimeMessage msg = new MimeMessage(session);
+        msg.setFrom(new InternetAddress(FROM,FROMNAME));
+        msg.setRecipient(Message.RecipientType.TO, new InternetAddress(toEmail));
+        msg.setSubject(SUBJECT);
+//        msg.setContent(BODY,"text/html");
+
+        // -----------------------------------------Add a configuration set header. Comment or delete the
+        // -----------------------------------------next line if you are not using a configuration set
+//        msg.setHeader("X-SES-CONFIGURATION-SET", CONFIGSET);
+
+        // -----------------------------------------Create a transport.
+        Transport transport = session.getTransport();
+
+        // ----------------------------------------Send the message.
+        try
+        {
+            System.out.println("Sending...");
+
+            // ------------------------------------Connect to Amazon SES using the SMTP username and password you specified above.
+            transport.connect(HOST, SMTP_USERNAME, SMTP_PASSWORD);
+
+            // ------------------------------------Send the email.
+            transport.sendMessage(msg, msg.getAllRecipients());
+            System.out.println("Email sent!");
+        }
+        catch (Exception ex) {
+            System.out.println("The email was not sent.");
+            System.out.println("Error message: " + ex.getMessage());
+        }
+        finally
+        {
+            // ------------------------------------Close and terminate the connection.
+            transport.close();
+        }
+    }
+}
+---------------x-----------------------------x--------------------------------x-----------------------------x---------------------
